@@ -24,8 +24,6 @@ GUI
   - xml
   - export
 
-  
-0. Google OAuth. Add user state management
 
 1. (3 cam) multicut rules:
 - sync audio b/w cameras
