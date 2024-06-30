@@ -13,7 +13,7 @@ class MultiPodGUI:
         self.root = tk.Tk()
         self.root.title("MultiPod")
 
-        self.root.geometry("600x700")
+        self.root.geometry("500x600")
         self.root.configure(background='white')
         self.root.resizable(False, False)
         default_font = font.nametofont("TkDefaultFont")
@@ -38,7 +38,8 @@ class MultiPodGUI:
         self.file_labels = {
             "Shot Angle 1": None,
             "Shot Angle 2": None,
-            "Shot Angle 3": None
+            "Shot Angle 3": None,
+            "Audio File": None,
         }
 
         # Step 2
