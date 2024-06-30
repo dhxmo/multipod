@@ -1,76 +1,9 @@
 import re
+import threading
 import tkinter as tk
-from tkinter import ttk, messagebox, filedialog, font
-import ttkthemes
+from tkinter import filedialog, ttk, messagebox
 
-
-class MultiPodGUI:
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.root = tk.Tk()
-        self.root.title("MultiPod")
-
-        self.root.geometry("600x700")
-        self.root.configure(background='white')
-        self.root.resizable(False, False)
-        default_font = font.nametofont("TkDefaultFont")
-        default_font.configure(family="Arial", size=10)
-        self.root.option_add("*Font", default_font)
-
-        s = ttk.Style(self.root)
-        s.configure('flat.TButton', borderwidth=0)
-
-        style = ttkthemes.ThemedStyle()
-        style.set_theme("breeze")
-
-        # Define a bold font
-        self.bold_font = font.Font(family="Arial", size=15, weight="bold")
-
-        container = tk.Frame(self.root)
-        container.pack(side="top", fill="both", expand=True)
-        container.grid_rowconfigure(0, weight=1)
-        container.grid_columnconfigure(0, weight=1)
-
-        # Step 1
-        self.file_labels = {
-            "Shot Angle 1": None,
-            "Shot Angle 2": None,
-            "Shot Angle 3": None
-        }
-
-        # Step 2
-        self.video_prefs_selection_var = tk.StringVar()
-
-        # Step 3
-        self.trim_silence_var = tk.BooleanVar()
-        self.threshold_scale_value = tk.DoubleVar()
-        self.clean_audio_var = tk.BooleanVar()
-
-        # Step 4
-        self.export_var = tk.StringVar()
-
-        self.frames = {}
-        for F in (FRAME_1_file_select, FRAME_2_video_prefs, FRAME_3_audio_prefs, FRAME_4_export):
-            frame = F(container, self)
-            frame.grid(row=0, column=0, sticky="nsew")
-            self.frames[F] = frame
-
-        self.current_frame = FRAME_1_file_select
-
-        self.root.protocol("WM_DELETE_WINDOW", self.close)
-
-        self.show_frame(self.current_frame)
-
-        self.root.mainloop()
-
-    def show_frame(self, cont):
-        frame = self.frames[cont]
-        frame.tkraise()
-
-    def close(self):
-        if messagebox.askyesno("Quit", "Do you want to quit?"):
-            self.root.destroy()
+from multipod.MultiPod import MultiPod
 
 
 def select_file(angle, controller):
@@ -181,36 +114,6 @@ class FRAME_3_audio_prefs(tk.Frame):
         self.controller.threshold_scale_value.set(value)
 
 
-def on_button_click(controller):
-    """Method called when the button is clicked, passing the controller object."""
-    # if angle 1 or 2 is missing, throw message box
-    if not controller.file_labels["Shot Angle 1"].cget("text") or not controller.file_labels["Shot Angle 2"].cget(
-            "text"):
-        messagebox.showinfo("Input Video Select", "Please select a video for Person 1 and Person 2 shot angles.")
-
-    for k, v in controller.file_labels.items():
-        text = v.cget("text")
-        pattern = r"(?<=Selected File: ).*"
-        match = re.search(pattern, text)
-
-        if k == "Shot Angle 1" and not match:
-            messagebox.showinfo("Input Video Select", "Please select a video for Person 1 shot angle.")
-        elif k == "Shot Angle 2" and not match:
-            messagebox.showinfo("Input Video Select", "Please select a video for Person 2 shot angle.")
-        elif match:
-            file_path = match.group(0)
-            print(f"file_path: {k}", file_path)
-
-    print("step 2 video prefs: ", controller.video_prefs_selection_var.get())
-    print("step 3 audio prefs: ", controller.trim_silence_var.get(), controller.threshold_scale_value.get(),
-          controller.clean_audio_var.get())
-
-    if not controller.export_var.get():
-        messagebox.showinfo("Output Format Select", "Please select an output format for the export.")
-    else:
-        print("step 4 export: ", controller.export_var.get())
-
-
 class FRAME_4_export(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent, bg='white')
@@ -233,8 +136,43 @@ class FRAME_4_export(tk.Frame):
 
         self.button1 = ttk.Button(self, text="MultiPod Me!", width=30)
         self.button1.pack(anchor="center", padx=20, pady=20)
-        self.button1.bind('<Button-1>', lambda event: on_button_click(controller))
+        self.button1.bind('<Button-1>', lambda event: self.on_button_click(controller))
 
+        self.progress_bar = ttk.Progressbar(self, orient="horizontal", length=200, mode="indeterminate")
 
-if __name__ == "__main__":
-    MultiPodGUI()
+    def on_button_click(self, controller):
+        """Method called when the button is clicked, passing the controller object."""
+        # if angle 1 or 2 is missing, throw message box
+        if not controller.file_labels["Shot Angle 1"].cget("text") or not controller.file_labels["Shot Angle 2"].cget(
+                "text"):
+            messagebox.showinfo("Input Video Select", "Please select a video for Person 1 and Person 2 shot angles.")
+        else:
+            file_paths = {}
+
+            for k, v in controller.file_labels.items():
+                text = v.cget("text")
+                pattern = r"(?<=Selected File: ).*"
+                match = re.search(pattern, text)
+
+                if k == "Shot Angle 1" and not match:
+                    messagebox.showinfo("Input Video Select", "Please select a video for Person 1 shot angle.")
+                elif k == "Shot Angle 2" and not match:
+                    messagebox.showinfo("Input Video Select", "Please select a video for Person 2 shot angle.")
+                elif match:
+                    file_path = match.group(0)
+                    file_paths[k] = file_path
+
+            if not controller.video_prefs_selection_var.get():
+                messagebox.showinfo("Video Preferences Select", "Please select a valid video preference.")
+            else:
+                if not controller.export_var.get():
+                    messagebox.showinfo("Output Format Select", "Please select an output format for the export.")
+                elif controller.export_var.get() and file_paths and controller.video_prefs_selection_var.get():
+                    mp = MultiPod(file_paths,
+                                  controller.video_prefs_selection_var.get(),
+                                  controller.trim_silence_var.get(),
+                                  controller.threshold_scale_value.get(),
+                                  controller.clean_audio_var.get(),
+                                  controller.export_var.get())
+
+                    threading.Thread(target=mp.run, args=(self.progress_bar,)).start()
