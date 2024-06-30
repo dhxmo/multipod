@@ -1,5 +1,7 @@
+import re
 import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
+from tkinter import ttk, messagebox, filedialog, font
+import ttkthemes
 
 
 class MultiPodGUI:
@@ -8,12 +10,45 @@ class MultiPodGUI:
 
         self.root = tk.Tk()
         self.root.title("MultiPod")
-        self.root.geometry("800x400")
+
+        self.root.geometry("600x700")
+        self.root.configure(background='white')
+        self.root.resizable(False, False)
+        default_font = font.nametofont("TkDefaultFont")
+        default_font.configure(family="Arial", size=10)
+        self.root.option_add("*Font", default_font)
+
+        s = ttk.Style(self.root)
+        s.configure('flat.TButton', borderwidth=0)
+
+        style = ttkthemes.ThemedStyle()
+        style.set_theme("breeze")
+
+        # Define a bold font
+        self.bold_font = font.Font(family="Arial", size=15, weight="bold")
 
         container = tk.Frame(self.root)
         container.pack(side="top", fill="both", expand=True)
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
+
+        # Step 1
+        self.file_labels = {
+            "Shot Angle 1": None,
+            "Shot Angle 2": None,
+            "Shot Angle 3": None
+        }
+
+        # Step 2
+        self.video_prefs_selection_var = tk.StringVar()
+
+        # Step 3
+        self.trim_silence_var = tk.BooleanVar()
+        self.threshold_scale_value = tk.DoubleVar()
+        self.clean_audio_var = tk.BooleanVar()
+
+        # Step 4
+        self.export_var = tk.StringVar()
 
         self.frames = {}
         for F in (FRAME_1_file_select, FRAME_2_video_prefs, FRAME_3_audio_prefs, FRAME_4_export):
@@ -34,93 +69,171 @@ class MultiPodGUI:
         frame.tkraise()
 
     def close(self):
-        print("goodbye")
         if messagebox.askyesno("Quit", "Do you want to quit?"):
             self.root.destroy()
 
 
+def select_file(angle, controller):
+    # Open the file dialog and let the user select a file
+    filename = filedialog.askopenfilename(filetypes=[('Video Files', '*.mp4 *.avi *.mkv *.mov')])
+    if filename:
+        # Display the selected file name in the label for the specified angle
+        controller.file_labels[angle].config(text=f"Selected File: {filename}")
+
+
 class FRAME_1_file_select(tk.Frame):
     def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
+        tk.Frame.__init__(self, parent, bg='white')
 
-        # Initialize the dictionary mapping each file selection area to its label
-        self.file_labels = {
-            "Shot Angle 1": None,
-            "Shot Angle 2": None,
-            "Shot Angle 3": None
-        }
+        prev_button = ttk.Button(self, text="WELCOME", width=40, state="disabled", style='flat.TButton')
+        prev_button.pack(side="top", anchor="center", pady=20)
 
         # Helper function to create a file selection area
         def create_file_selection_area(angle):
-            shot_label = tk.Label(self, text=f"{angle}")
-            shot_label.grid(row=int(angle[-1]) - 1, column=0, padx=10, pady=10)
+            if angle == "Shot Angle 1":
+                shot_label = tk.Label(self, text=f"Person 1 Angle", font=controller.bold_font)
+            elif angle == "Shot Angle 2":
+                shot_label = tk.Label(self, text=f"Person 2 Angle", font=controller.bold_font)
+            else:
+                shot_label = tk.Label(self, text=f"Both Angle", font=controller.bold_font)
+
+            # Add the file selection area to the grid
+            shot_label.pack(anchor="center", padx=10, pady=10)
             select_button = ttk.Button(self, text="Select File",
-                                       command=lambda: self.select_file(f"{angle}"))
-            select_button.grid(row=int(angle[-1]) - 1, column=1, padx=10, pady=20)
-            self.file_labels[angle] = tk.Label(self, text="No file selected yet.")
-            self.file_labels[angle].grid(row=int(angle[-1]) - 1, column=2, padx=10, pady=10)
+                                       command=lambda: select_file(f"{angle}", controller))
+            select_button.pack(anchor="center", padx=10, pady=20)
+            controller.file_labels[angle] = tk.Label(self, text="No file selected yet.")
+            controller.file_labels[angle].pack(anchor="center", padx=10, pady=10)
 
         # Create file selection areas using the helper function
         angles = ["1", "2", "3"]
         for angle in angles:
             create_file_selection_area(f"Shot Angle {angle}")
 
-        button1 = ttk.Button(self, text="Next",
+        button1 = ttk.Button(self, text="Next", width=40,
                              command=lambda: controller.show_frame(FRAME_2_video_prefs))
-        button1.grid(row=3, column=0, columnspan=3, pady=20)
-
-    def select_file(self, angle):
-        # Open the file dialog and let the user select a file
-        filename = filedialog.askopenfilename(filetypes=[('All Files', '*.*')])
-        if filename:
-            # Display the selected file name in the label for the specified angle
-            self.file_labels[angle].config(text=f"Selected File: {filename}")
+        button1.pack(side="bottom", anchor="center", pady=40)
 
 
 class FRAME_2_video_prefs(tk.Frame):
     def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
+        tk.Frame.__init__(self, parent, bg='white')
 
-        button2 = ttk.Button(self, text="Previous",
-                             command=lambda: controller.show_frame(FRAME_1_file_select))
-        button2.pack(pady=20)
+        prev_button = ttk.Button(self, text="Previous", width=40,
+                                 command=lambda: controller.show_frame(FRAME_1_file_select))
+        prev_button.pack(side="top", anchor="center", pady=20)
 
-        self.checkbox = tk.Checkbutton(self, text="Select me")
-        self.checkbox.pack(pady=20)
+        self.video_pref_label = tk.Label(self, text=f"Video Edit Preferences", font=controller.bold_font)
+        self.video_pref_label.pack(pady=20)
 
-        button1 = ttk.Button(self, text="Next",
-                             command=lambda: controller.show_frame(FRAME_3_audio_prefs))
-        button1.pack(pady=20)
+        # Radio button for simple back and forth cuts
+        self.radio1 = tk.Radiobutton(self, text="Simple Back and Forth Cuts",
+                                     variable=controller.video_prefs_selection_var,
+                                     value="simple_back_and_forth_cuts")
+        self.radio1.pack(anchor='center', pady=20)
+
+        # Radio button for creative cuts
+        self.radio2 = tk.Radiobutton(self, text="Creative Cuts", variable=controller.video_prefs_selection_var,
+                                     value="creative_cuts")
+        self.radio2.pack(anchor='center', pady=20)
+
+        next_button = ttk.Button(self, text="Next", width=40,
+                                 command=lambda: controller.show_frame(FRAME_3_audio_prefs))
+        next_button.pack(side="bottom", anchor="center", pady=40)
 
 
 class FRAME_3_audio_prefs(tk.Frame):
     def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
+        tk.Frame.__init__(self, parent, bg='white')
 
-        button1 = ttk.Button(self, text="Previous",
-                             command=lambda: controller.show_frame(FRAME_2_video_prefs))
-        button1.pack(pady=20)
+        self.scale_threshold = None
+        self.threshold_label = None
 
-        self.submit_button = ttk.Button(self, text="Submit Frame 3",
-                                        command=lambda: print("Submit button clicked"))
-        self.submit_button.pack(pady=20)
+        prev_button = ttk.Button(self, text="Previous", width=40,
+                                 command=lambda: controller.show_frame(FRAME_2_video_prefs))
+        prev_button.pack(side="top", anchor="center", pady=20)
 
-        button1 = ttk.Button(self, text="Next",
-                             command=lambda: controller.show_frame(FRAME_4_export))
-        button1.pack(pady=20)
+        audio_prefs_label = tk.Label(self, text="Audio Edit Preferences", font=controller.bold_font)
+        audio_prefs_label.pack(pady=20)
+
+        self.checkbox1 = ttk.Checkbutton(self, text="trim silence", variable=controller.trim_silence_var)
+        self.checkbox1.pack(padx=20, pady=20)
+
+        # Label for the Threshold scale
+        self.controller = controller
+
+        self.threshold_label = tk.Label(self, text="Threshold")
+        self.threshold_label.pack(padx=20, pady=20)
+        self.scale_threshold = tk.Scale(self, from_=0, to=100, orient=tk.HORIZONTAL,
+                                        resolution=1, command=self.update_scale_value)
+        self.scale_threshold.pack(padx=20, pady=20)
+
+        self.checkbox2 = ttk.Checkbutton(self, text="clean audio", variable=controller.clean_audio_var)
+        self.checkbox2.pack(padx=20, pady=20)
+
+        next_button = ttk.Button(self, text="Next", width=40,
+                                 command=lambda: controller.show_frame(FRAME_4_export))
+        next_button.pack(side="bottom", anchor="center", pady=40)
+        # button1.grid(row=5, column=2, padx=20, pady=20)
+
+    def update_scale_value(self, value):
+        """Callback function to update self.scale_value with the current scale value."""
+        self.controller.threshold_scale_value.set(value)
+
+
+def on_button_click(controller):
+    """Method called when the button is clicked, passing the controller object."""
+    # if angle 1 or 2 is missing, throw message box
+    if not controller.file_labels["Shot Angle 1"].cget("text") or not controller.file_labels["Shot Angle 2"].cget(
+            "text"):
+        messagebox.showinfo("Input Video Select", "Please select a video for Person 1 and Person 2 shot angles.")
+
+    for k, v in controller.file_labels.items():
+        text = v.cget("text")
+        pattern = r"(?<=Selected File: ).*"
+        match = re.search(pattern, text)
+
+        if k == "Shot Angle 1" and not match:
+            messagebox.showinfo("Input Video Select", "Please select a video for Person 1 shot angle.")
+        elif k == "Shot Angle 2" and not match:
+            messagebox.showinfo("Input Video Select", "Please select a video for Person 2 shot angle.")
+        elif match:
+            file_path = match.group(0)
+            print(f"file_path: {k}", file_path)
+
+    print("step 2 video prefs: ", controller.video_prefs_selection_var.get())
+    print("step 3 audio prefs: ", controller.trim_silence_var.get(), controller.threshold_scale_value.get(),
+          controller.clean_audio_var.get())
+
+    if not controller.export_var.get():
+        messagebox.showinfo("Output Format Select", "Please select an output format for the export.")
+    else:
+        print("step 4 export: ", controller.export_var.get())
 
 
 class FRAME_4_export(tk.Frame):
     def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
+        tk.Frame.__init__(self, parent, bg='white')
 
-        button1 = ttk.Button(self, text="Previous",
-                             command=lambda: controller.show_frame(FRAME_3_audio_prefs))
-        button1.pack(pady=20)
+        prev_button = ttk.Button(self, text="Previous", width=40,
+                                 command=lambda: controller.show_frame(FRAME_3_audio_prefs))
+        prev_button.pack(side="top", anchor="center", pady=20)
 
-        self.submit_button = ttk.Button(self, text="Submit Frame 4",
-                                        command=lambda: print("Submit button clicked"))
-        self.submit_button.pack(pady=20)
+        self.controller = controller
+
+        self.radio1 = tk.Radiobutton(self, text="XML (for further editing in your editing suite)",
+                                     variable=controller.export_var,
+                                     value="xml")
+        self.radio1.pack(anchor='center', pady=20)
+
+        self.radio2 = tk.Radiobutton(self, text="mp4",
+                                     variable=controller.export_var,
+                                     value="mp4")
+        self.radio2.pack(anchor='center', pady=20)
+
+        self.button1 = ttk.Button(self, text="MultiPod Me!", width=30)
+        self.button1.pack(anchor="center", padx=20, pady=20)
+        self.button1.bind('<Button-1>', lambda event: on_button_click(controller))
 
 
 if __name__ == "__main__":
