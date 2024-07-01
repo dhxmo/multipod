@@ -39,7 +39,7 @@ class MultiPodGUI:
             "Shot Angle 1": None,
             "Shot Angle 2": None,
             "Shot Angle 3": None,
-            "Audio File": None,
+            # "Audio File": None,
         }
 
         # Step 2

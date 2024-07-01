@@ -3,7 +3,7 @@ import threading
 import tkinter as tk
 from tkinter import filedialog, ttk, messagebox
 
-from multipod.MultiPod import MultiPod
+from core.MultiPod import MultiPod
 
 
 class FRAME_1_file_select(tk.Frame):
@@ -12,6 +12,9 @@ class FRAME_1_file_select(tk.Frame):
 
         welcome_button = ttk.Button(self, text="WELCOME", width=40, state="disabled", style='flat.TButton')
         welcome_button.grid(row=0, column=0, columnspan=4, pady=20)
+
+        info_label = tk.Label(self, text="Sync your videos with the podcast audio and then upload the videos here.")
+        info_label.grid(row=1, column=0, columnspan=4, pady=20)
 
         def select_video_file(label_key, controller, btn):
             # Open the file dialog and let the user select a file
@@ -37,14 +40,14 @@ class FRAME_1_file_select(tk.Frame):
             else:
                 shot_label = tk.Label(self, text=f"Both People", font=controller.bold_font)
 
-            shot_label.grid(row=int(angle[-1]), column=0, padx=10, pady=10)
+            shot_label.grid(row=int(angle[-1]) + 1, column=0, padx=10, pady=10)
 
             # video select
             video_select_button = ttk.Button(self, text="Select Video File",
                                              command=lambda: select_video_file(f"Shot Angle {angle}",
                                                                                controller,
                                                                                video_select_button))
-            video_select_button.grid(row=int(angle[-1]), column=2, padx=10, pady=20)
+            video_select_button.grid(row=int(angle[-1]) + 1, column=2, padx=10, pady=20)
             controller.file_labels[f"Shot Angle {angle}"] = tk.Label(self, text="")
 
         # Create file selection areas using the helper function
@@ -57,12 +60,12 @@ class FRAME_1_file_select(tk.Frame):
                                          command=lambda: select_audio_file("Audio File",
                                                                            controller,
                                                                            audio_select_button))
-        audio_select_button.grid(row=5, column=1, padx=10, pady=20)
-        controller.file_labels["Audio File"] = tk.Label(self, text="")
+        # audio_select_button.grid(row=6, column=1, padx=10, pady=20)
+        # controller.file_labels["Audio File"] = tk.Label(self, text="")
 
         button1 = ttk.Button(self, text="Next", width=40,
                              command=lambda: controller.show_frame(FRAME_2_video_prefs))
-        button1.grid(row=6, column=0, columnspan=4, pady=20)
+        button1.grid(row=7, column=0, columnspan=4, pady=20)
 
 
 class FRAME_2_video_prefs(tk.Frame):
@@ -172,9 +175,8 @@ class FRAME_4_export(tk.Frame):
         """Method called when the button is clicked, passing the controller object."""
         # if angle 1 or 2 is missing, throw message box
         if (controller.file_labels["Shot Angle 1"].cget("text") == "" or
-                controller.file_labels["Shot Angle 2"].cget("text") == "" or
-                controller.file_labels["Audio File"].cget("text") == ""):
-            messagebox.showinfo("Input Error", "Please select a video and audio file for both "
+                controller.file_labels["Shot Angle 2"].cget("text") == ""):
+            messagebox.showinfo("Input Error", "Please select a video file for both "
                                                "Person 1 and Person 2 shot angles.")
         else:
             file_paths = {}

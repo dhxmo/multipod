@@ -42,7 +42,7 @@ class MultiPod:
         print("export_var: ", self.export_var)
 
         #################################################
-        # all the multipod processing happens here
+        # all the core processing happens here
         # Control Flow:
 
         # STEP 2: sync videos with voice diarization
