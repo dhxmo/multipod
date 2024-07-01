@@ -4,7 +4,7 @@ from scipy.spatial import distance as dist
 import logging
 
 # Configure logger
-logging.basicConfig(level=logging.ERROR)
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 
