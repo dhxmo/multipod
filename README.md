@@ -45,3 +45,11 @@ GUI
 
 3. export final as xml/mp4. 
    - xml can be imported to video editing software and manipulated further
+
+
+
+TIME : 0.0 ---- SPEAKER : 0
+TIME : 6.200000000000003 ---- SPEAKER : 1
+TIME : 6.400000000000003 ---- SPEAKER : 0
+TIME : 8.8 ---- SPEAKER : 1
+TIME : 9.0 ---- SPEAKER : 0
