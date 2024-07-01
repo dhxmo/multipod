@@ -4,9 +4,21 @@ from sklearn.cluster import KMeans
 
 
 def get_speakers(file_name):
+    """
+    This function performs speaker diarization using KMeans clustering on audio features.
+
+    Args:
+    file_name (str): The path to the audio file
+
+    Returns:
+    None
+    """
+
+    # Load audio file
     audio_time_series, sample_rate = li.load(file_name)
     length_series = len(audio_time_series)
 
+    # Extract audio features
     zero_crossings = []
     energy = []
     entropy_of_energy = []
@@ -36,17 +48,17 @@ def get_speakers(file_name):
         for k in range(0, len(cf)):
             ct.append(np.mean(cf[k]))
         chroma_stft.append(ct)
-    f_list_1 = []
-    f_list_1.append(zero_crossings)
-    f_list_1.append(energy)
-    f_list_1.append(entropy_of_energy)
-    f_np_1 = np.array(f_list_1)
-    f_np_1 = np.transpose(f_np_1)
 
+    # Prepare feature matrices
+    f_list_1 = [zero_crossings, energy, entropy_of_energy]
+    f_np_1 = np.transpose(np.array(f_list_1))
+
+    # Extract spectral features
     sp_centroid = []
     sp_bandwidth = []
     sp_contrast = []
     sp_rolloff = []
+
     for i in range(0, length_series, int(sample_rate / 5.0)):
         frame_self = audio_time_series[i:i + int(sample_rate / 5.0):1]
         cp = li.feature.spectral_centroid(y=frame_self, hop_length=220500)
@@ -57,20 +69,22 @@ def get_speakers(file_name):
         sp_contrast.append(np.mean(csp))
         rsp = li.feature.spectral_rolloff(y=frame_self, hop_length=220500)
         sp_rolloff.append(np.mean(rsp[0][0]))
-        # print(i)
 
+    # Prepare spectral feature matrix
     f_list_2 = [sp_centroid, sp_bandwidth, sp_contrast, sp_rolloff]
     f_np_2 = np.array(f_list_2)
     f_np_2 = np.transpose(f_np_2)
 
+    # Concatenate feature matrices
     f_np_3 = np.array(mfcc)
     f_np_4 = np.array(chroma_stft)
-
     master = np.concatenate([f_np_1, f_np_2, f_np_3, f_np_4], axis=1)
 
+    # Cluster audio features
     cluster_obj = KMeans(n_clusters=2, random_state=0).fit(master)
     res = cluster_obj.predict(master)
 
+    # Speaker diarization
     s = res[0]
     t = 0.0
     time = []
