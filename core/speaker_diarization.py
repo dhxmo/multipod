@@ -12,6 +12,7 @@ def get_speakers(file_name):
     entropy_of_energy = []
     mfcc = []
     chroma_stft = []
+
     for i in range(0, length_series, int(sample_rate / 5.0)):
         frame_self = audio_time_series[i:i + int(sample_rate / 5.0):1]
         z = li.zero_crossings(frame_self)
