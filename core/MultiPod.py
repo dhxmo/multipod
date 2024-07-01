@@ -68,6 +68,6 @@ class MultiPod:
         #################################################
 
         # After completing the task, update GUI
-        progress_bar.stop()  # Stop the progress bar
+        progress_bar.stop()
         progress_bar.pack_forget()
         done_label.pack(pady=10)
