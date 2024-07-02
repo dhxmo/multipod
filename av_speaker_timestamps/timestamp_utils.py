@@ -20,8 +20,12 @@ def mouth_aspect_ratio(mouth):
         float: The mouth aspect ratio.
 
     """
-    A = dist.euclidean(mouth[2], mouth[9])
-    B = dist.euclidean(mouth[4], mouth[7])
-    C = dist.euclidean(mouth[0], mouth[6])
-    mar = (A + B) / (2.0 * C)
-    return mar
+    try:
+        A = dist.euclidean(mouth[2], mouth[9])
+        B = dist.euclidean(mouth[4], mouth[7])
+        C = dist.euclidean(mouth[0], mouth[6])
+        mar = (A + B) / (2.0 * C)
+        return mar
+    except Exception as e:
+        logger.exception("Unhandled exception in mouth_aspect_ratio: %s", str(e))
+        raise

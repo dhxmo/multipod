@@ -8,6 +8,16 @@ from core.MultiPod import MultiPod
 
 class FRAME_1_file_select(tk.Frame):
     def __init__(self, parent, controller):
+        """
+        Initializes the FRAME_1_file_select object.
+
+        Parameters:
+            parent: The parent widget.
+            controller: The main controller managing the frames.
+
+        Returns:
+            None
+        """
         tk.Frame.__init__(self, parent, bg="white")
 
         welcome_button = ttk.Button(
@@ -22,6 +32,18 @@ class FRAME_1_file_select(tk.Frame):
         info_label.grid(row=1, column=0, columnspan=4, pady=20)
 
         def select_video_file(label_key, controller, btn):
+            """
+            A function that opens a file dialog to select a file.
+            It updates the label with the selected file name based on the angle provided.
+
+            Parameters:
+                label_key: The key to identify the label.
+                controller: The controller managing the frames.
+                btn: The button to update with the selected file name.
+
+            Returns:
+                None
+            """
             # Open the file dialog and let the user select a file
             filename = filedialog.askopenfilename(
                 filetypes=[("Video Files", "*.mp4 *.avi *.mkv *.mov")]
@@ -32,6 +54,15 @@ class FRAME_1_file_select(tk.Frame):
                 btn.config(text=filename.split("/")[-1])
 
         def create_file_selection_area(angle):
+            """
+            Sets labels based on the given angle. Creates a button to select a video file.
+
+            Parameters:
+                angle: A string representing the angle. Can be "1", "2", or any other value.
+
+            Returns:
+                None
+            """
             # set label
             if angle == "1":
                 shot_label = tk.Label(self, text=f"Person 1", font=controller.bold_font)
@@ -71,6 +102,16 @@ class FRAME_1_file_select(tk.Frame):
 
 class FRAME_2_video_prefs(tk.Frame):
     def __init__(self, parent, controller):
+        """
+        Initialize the frame with parent and controller.
+
+        Parameters:
+            parent: The parent frame.
+            controller: The controller for the frame.
+
+        Returns:
+            None
+        """
         tk.Frame.__init__(self, parent, bg="white")
 
         prev_button = ttk.Button(
@@ -113,6 +154,16 @@ class FRAME_2_video_prefs(tk.Frame):
 
 class FRAME_3_audio_prefs(tk.Frame):
     def __init__(self, parent, controller):
+        """
+        Initializes the FRAME_3_audio_prefs object.
+
+        Parameters:
+            parent: The parent widget.
+            controller: The main controller managing the frames.
+
+        Returns:
+            None
+        """
         tk.Frame.__init__(self, parent, bg="white")
 
         self.scale_threshold = None
@@ -131,14 +182,6 @@ class FRAME_3_audio_prefs(tk.Frame):
             self, text="Audio Edit Preferences", font=controller.bold_font
         )
         audio_prefs_label.pack(pady=20)
-
-        def select_audio_file(file_tag, controller):
-            filename = filedialog.askopenfilename(
-                filetypes=[("Audio Files", "*.mp3 *.wav")]
-            )
-            if filename:
-                # Display the selected file name in the label for the specified angle
-                controller.file_labels[file_tag].config(text=f"{filename}")
 
         self.checkbox1 = ttk.Checkbutton(
             self, text="trim silence", variable=controller.trim_silence_var
@@ -177,6 +220,16 @@ class FRAME_3_audio_prefs(tk.Frame):
 
 class FRAME_4_export(tk.Frame):
     def __init__(self, parent, controller):
+        """
+        Initializes the FRAME_1_file_select object with the parent widget and controller.
+
+        Parameters:
+            parent: The parent widget.
+            controller: The main controller managing the frames.
+
+        Returns:
+            None
+        """
         tk.Frame.__init__(self, parent, bg="white")
 
         prev_button = ttk.Button(

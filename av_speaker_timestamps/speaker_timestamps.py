@@ -74,7 +74,7 @@ class SpeakerTimestamps:
             with open("diarization.rttm", "w") as rttm:
                 dz.write_rttm(rttm)
         except Exception as e:
-            logger.error(e)
+            logger.error("Unhandled exception in diarize: %s", str(e))
             raise
 
     def read_diarize_rttm(self):
@@ -197,7 +197,7 @@ class SpeakerTimestamps:
                 / (self.max_speaker1_frames[1] - self.max_speaker1_frames[0]),
             )
         except Exception as e:
-            logger.exception(e)
+            logger.exception("Unhandled exception in face detect: %s", str(e))
             return None, None
 
     def write_timestamps(self, video_file_1, video_file_2, video_1_json, video_2_json):
@@ -274,7 +274,6 @@ class SpeakerTimestamps:
                 json.dump(video_1_dicts, final)
 
             os.remove("diarization.rttm")
-            print("removed diarization.rttm")
         except Exception as e:
-            logger.exception(e)
+            logger.exception("Unhandled exception in writing timestamps: %s", str(e))
             raise

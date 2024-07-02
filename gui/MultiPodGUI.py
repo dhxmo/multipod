@@ -13,6 +13,12 @@ from gui.frames import (
 
 class MultiPodGUI:
     def __init__(self, *args, **kwargs):
+        """
+        Initializes the MultiPodGUI object.
+        Creates the main GUI window with specific attributes and styling.
+        Sets up the initial frames for different steps in the GUI.
+        Binds the close event to the window and starts the main GUI event loop.
+        """
         super().__init__(*args, **kwargs)
 
         self.root = tk.Tk()

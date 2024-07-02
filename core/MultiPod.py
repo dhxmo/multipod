@@ -15,6 +15,20 @@ class MultiPod:
         clean_audio_var,
         export_var,
     ):
+        """
+        Initializes the MultiPod object with the provided parameters.
+
+        Parameters:
+            file_paths (dict): A dictionary containing file paths for different shot angles.
+            video_prefs_selection_var (str): The selected video preference.
+            trim_silence_var (bool): Boolean flag for trimming silence.
+            threshold_scale_value (float): The threshold scale value.
+            clean_audio_var (bool): Boolean flag for cleaning audio.
+            export_var (str): The selected export format.
+
+        Returns:
+            None
+        """
         self.camera_1_video_path = None
         self.camera_2_video_path = None
         self.camera_3_video_path = None
@@ -58,6 +72,19 @@ class MultiPod:
         self.export_var = export_var
 
     def run(self, progress_bar, be_patient_label, done_label):
+        """
+        Runs the entire multipod processing workflow including syncing videos with voice diarization, making cuts
+        based on video preferences, trimming silence and cleaning audio if needed, and exporting the final output.
+
+        Parameters:
+            progress_bar: The progress bar widget to show the progress of the workflow.
+            be_patient_label: The label widget indicating to be patient during the processing.
+            done_label: The label widget indicating the completion of the processing.
+
+        Returns:
+            None
+        """
+
         # Start the progress bar animation
         progress_bar.pack(pady=10)
         progress_bar.start()
@@ -78,7 +105,7 @@ class MultiPod:
             elif self.video_prefs_selection_var == "creative_cuts":
                 pass
             #      -> cut together with J/L
-            #   - If Shot Angle 3 is not none ->  footage available, Cut to a wide angle if more than one person is talking.
+            #   - If Shot Angle 3 is not none -> footage available, Cut to a wide angle if more than one person is talking.
             #   - Don’t cut away if someone is monologuing more than 30 secs. Even if they’re briefly interrupted.
             #   - Don’t cut to a new camera for speech less than 3 secs.
             #   - Cut to a new camera 3 secs BEFORE they start speaking. (L-Cut)
@@ -108,7 +135,7 @@ class MultiPod:
             # STEP 7: delete audio and json files
 
         except Exception as e:
-            logger.exception(e)
+            logger.exception("Unhandled exception in multipod run: %s", str(e))
             raise
         #################################################
 
@@ -134,5 +161,5 @@ class MultiPod:
                 self.video_2_json,
             )
         except Exception as e:
-            logger.exception(e)
+            logger.exception("Unhandled exception in getting timestamps: %s", str(e))
             raise
