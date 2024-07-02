@@ -2,11 +2,11 @@ from pathlib import Path
 from subprocess import call
 
 from av_speaker_timestamps.speaker_timestamps import SpeakerTimestamps
-from core.Timestamps import Timestamps
+from core.Timestamps import Timestamps, mod_json_2_specs
 from core.util import logger
 
 
-class MultiPod:
+class MultiPod(object):
     def __init__(
         self,
         file_paths,
@@ -180,8 +180,8 @@ class MultiPod:
             raise
 
     def preprocess_json(self):
-        self.mts.mod_json_2_specs(self.video_1_json, self.video_1_json_mod)
-        self.mts.mod_json_2_specs(self.video_2_json, self.video_2_json_mod)
+        mod_json_2_specs(self.video_1_json, self.video_1_json_mod)
+        mod_json_2_specs(self.video_2_json, self.video_2_json_mod)
         self.mts.combine_mod_jsons(
             self.video_1_json_mod,
             self.video_2_json_mod,

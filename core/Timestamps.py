@@ -5,46 +5,22 @@ class Timestamps(object):
     def __init__(self, combined_json):
         self.combined_json = combined_json
 
-    @staticmethod
-    def mod_json_2_specs(json_file_name, mod_json_file_name):
-        # Load the JSON file
-        with open(json_file_name, "r") as file:
-            data = json.load(file)
-
-        # Sort the list based on the Start time
-        data.sort(key=lambda x: x["Start"])
-
-        merged_data = []
-        current_event = None
-
-        for i, event in enumerate(data):
-            if current_event is None:
-                # This is the first event, so just add it to the merged_data
-                current_event = event
-                merged_data.append(current_event)
-            elif event["Start"] <= current_event["End"] + 2.0:
-                # Merge the events
-                current_event["End"] = max(event["End"], current_event["End"])
-                current_event["Duration"] += event["Duration"]
-            else:
-                # Add the current event to the merged_data and move to the next event
-                if current_event["Key"] != 0:
-                    merged_data.append(current_event)
-                current_event = event
-
-        # Add the last event if it hasn't been added yet
-        if current_event is not None:
-            merged_data.append(current_event)
-
-        # Iterate through merged_data again to apply the new rule
-        for event in merged_data:
-            if event["Duration"] < 2:
-                merged_data.remove(event)
-
-        with open(mod_json_file_name, "w", encoding="utf-8") as file:
-            json.dump(merged_data, file, indent=4)
-
     def combine_mod_jsons(self, mod_json_1, mod_json_2, name_1, name_2):
+        """
+        Combine two JSON files, remove a specific key from each dictionary, merge the data, sort it, add a speaker
+        key based on the file it came from, filter entries based on duration, and write the processed data to a
+        new JSON file.
+
+        Parameters:
+        - mod_json_1: str, path to the first JSON file
+        - mod_json_2: str, path to the second JSON file
+        - name_1: str, name associated with mod_json_1
+        - name_2: str, name associated with mod_json_2
+
+        Returns:
+        None
+        """
+
         # Load JSON data from files
         with open(mod_json_1, "r") as file_a, open(mod_json_2, "r") as file_b:
             data_a = json.load(file_a)
@@ -89,24 +65,94 @@ class Timestamps(object):
             json.dump(filtered_silenced_both_filler_datalist, file, indent=2)
 
 
-def process_overlapping_entries(entries):
-    i = 0
-    while i + 1 < len(entries):  # Ensure there's a next entry to compare
-        current_entry = entries[i]
-        next_entry = entries[i + 1]
+def mod_json_2_specs(json_file_name, mod_json_file_name):
+    """
+    A function that modifies a JSON file by merging events that are close in time and removing events with a duration
+    less than 2.0.
 
-        # Check if the current entry ends after the next entry starts
-        if current_entry["End"] > next_entry["Start"]:
-            # Update the Speaker of the current entry to "Both" and remove the next entry
-            current_entry["Speaker"] = "Both"
-            del entries[i + 1]
+    Parameters:
+    json_file_name (str): The file name of the JSON file to be modified.
+    mod_json_file_name (str): The file name to save the modified JSON data.
+
+    Returns:
+    None
+    """
+
+    # Load the JSON file
+    with open(json_file_name, "r") as file:
+        data = json.load(file)
+
+    # Sort the list based on the Start time
+    data.sort(key=lambda x: x["Start"])
+
+    merged_data = []
+    current_event = None
+
+    for i, event in enumerate(data):
+        if current_event is None:
+            # This is the first event, so just add it to the merged_data
+            current_event = event
+            merged_data.append(current_event)
+        elif event["Start"] <= current_event["End"] + 2.0:
+            # Merge the events
+            current_event["End"] = max(event["End"], current_event["End"])
+            current_event["Duration"] += event["Duration"]
         else:
-            i += 1  # Move to the next pair without modifying
+            # Add the current event to the merged_data and move to the next event
+            if current_event["Key"] != 0:
+                merged_data.append(current_event)
+            current_event = event
 
-    return entries
+    # Add the last event if it hasn't been added yet
+    if current_event is not None:
+        merged_data.append(current_event)
+
+    # Iterate through merged_data again to apply the new rule
+    for event in merged_data:
+        if event["Duration"] < 2:
+            merged_data.remove(event)
+
+    with open(mod_json_file_name, "w", encoding="utf-8") as file:
+        json.dump(merged_data, file, indent=4)
+
+
+# def process_overlapping_entries(entries):
+#     """
+#     Process overlapping entries in a list by updating the "Speaker" field of the current entry to "Both" and removing
+#     any subsequent entry where the end of the current entry is after the start of the next entry.
+#
+#     Parameters:
+#     entries (list): A list of entries to process for overlapping.
+#
+#     Returns:
+#     list: The updated list of entries after processing the overlaps.
+#     """
+#     i = 0
+#     while i + 1 < len(entries):  # Ensure there's a next entry to compare
+#         current_entry = entries[i]
+#         next_entry = entries[i + 1]
+#
+#         # Check if the current entry ends after the next entry starts
+#         if current_entry["End"] > next_entry["Start"]:
+#             # Update the Speaker of the current entry to "Both" and remove the next entry
+#             current_entry["Speaker"] = "Both"
+#             del entries[i + 1]
+#         else:
+#             i += 1  # Move to the next pair without modifying
+#
+#     return entries
 
 
 def add_silence(data):
+    """
+    Generate a filled-in version of the input data with silent gaps inserted where necessary.
+
+    Parameters:
+    data (list of dict): A list of dictionaries representing data entries with "Start" and "End" times.
+
+    Returns:
+    list of dict: A list of dictionaries with silent gaps inserted to fill in missing data.
+    """
     # Sort the data by Start time
     sorted_data = sorted(data, key=lambda x: x["Start"])
 
@@ -144,6 +190,17 @@ def add_silence(data):
 
 
 def add_both_filler(data):
+    """
+    Adds the label "Both" to the Speaker field of the next entry if the End time of the next entry is less than the
+    End time of the current entry
+    and the Duration of the next entry is greater than 5.0.
+
+    Parameters:
+        data (list): A list of dictionaries representing entries with "Start", "End", "Duration", and "Speaker" keys.
+
+    Returns:
+        list: The modified data list with the appropriate Speaker labels.
+    """
     # Sort the data by Start time
     data.sort(key=lambda x: x["Start"])
 
