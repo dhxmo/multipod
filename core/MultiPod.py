@@ -98,20 +98,28 @@ class MultiPod:
             # TODO: uncomment when ready
             # self.get_speaker_timestamps()
 
-            # STEP 3: if video_prev -> simple cuts -> cut video together simply
+            # STEP 3a -> preprocess the json
+            # if the (key_next_start < key_prev_end) or (key_next_start < key_prev_end + 1)
+            #   key_prev_start -> key_next_end into one json entry
+            #   duration of the two added together
+
+            # STEP 3b: if video_prev -> simple cuts -> cut video together simply
+            # TODO: when silent and P3 provided, use that, else pick P1/P2 randomly
+
             if self.video_prefs_selection_var == "simple_back_and_forth_cuts":
                 pass
                 # cut video together -> simple back n forth
             elif self.video_prefs_selection_var == "creative_cuts":
+                # preprocess the json
+                #  if duration < 2 -> duration = 3
                 pass
-            #      -> cut together with J/L
-            #   - If Shot Angle 3 is not none -> footage available, Cut to a wide angle if more than one person is talking.
+                # preprocess the json
+
+            #   - If P3 is not none -> Cut to a wide angle if both are talking.
             #   - Don’t cut away if someone is monologuing more than 30 secs. Even if they’re briefly interrupted.
             #   - Don’t cut to a new camera for speech less than 3 secs.
             #   - Cut to a new camera 3 secs BEFORE they start speaking. (L-Cut)
             #   - Cut to a new camera 3 secs AFTER they start speaking. (J-Cut)
-            #   - Don’t cut to Person D if they talk.
-            #
 
             # STEP 4: if audio_prev -> trim silence -> trim and resync with video
             if self.trim_silence_var:
@@ -147,7 +155,8 @@ class MultiPod:
 
     def get_speaker_timestamps(self):
         """
-        Function to get speaker timestamps by diarizing, reading diarized RTTM file, initializing speaker timestamps, and writing timestamps.
+        Function to get speaker timestamps by diarizing, reading diarized RTTM file, initializing speaker
+        timestamps, and writing timestamps.
         """
         try:
             sts = SpeakerTimestamps()
