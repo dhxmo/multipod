@@ -2,7 +2,8 @@ from pathlib import Path
 from subprocess import call
 
 from av_speaker_timestamps.speaker_timestamps import SpeakerTimestamps
-from core.util import logger, mod_json_2_specs, combine_mod_jsons
+from core.Timestamps import Timestamps
+from core.util import logger
 
 
 class MultiPod:
@@ -46,6 +47,7 @@ class MultiPod:
             "assets/sounds/" + self.camera_1_video_path.stem + ".wav"
         )
 
+        # TODO: overwrite if already present
         call(
             [
                 "ffmpeg",
@@ -72,7 +74,9 @@ class MultiPod:
         self.video_1_json_mod = f"assets/json/{self.filename_1}_mod.json"
         self.video_2_json_mod = f"assets/json/{self.filename_2}_mod.json"
 
-        self.combined_json = f"assets/json/combined_timestamps.json"
+        self.combined_json = "assets/json/combined_timestamps.json"
+
+        self.mts = Timestamps(self.combined_json)
 
         self.video_prefs_selection_var = video_prefs_selection_var
         self.trim_silence_var = trim_silence_var
@@ -104,7 +108,6 @@ class MultiPod:
 
         try:
             # STEP 2: sync videos with voice diarization. get timestamps
-            # TODO: uncomment when ready
             # self.get_speaker_timestamps()
 
             # STEP 3a -> preprocess the json
@@ -177,12 +180,11 @@ class MultiPod:
             raise
 
     def preprocess_json(self):
-        mod_json_2_specs(self.video_1_json, self.video_1_json_mod)
-        mod_json_2_specs(self.video_2_json, self.video_2_json_mod)
-        combine_mod_jsons(
+        self.mts.mod_json_2_specs(self.video_1_json, self.video_1_json_mod)
+        self.mts.mod_json_2_specs(self.video_2_json, self.video_2_json_mod)
+        self.mts.combine_mod_jsons(
             self.video_1_json_mod,
             self.video_2_json_mod,
-            self.combined_json,
             self.filename_1,
             self.filename_2,
         )
