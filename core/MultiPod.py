@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 from subprocess import call
 
@@ -33,12 +32,11 @@ class MultiPod:
             "assets/sounds/" + self.camera_1_video_path.stem + ".wav"
         )
 
-        video_file = self.camera_1_video_path.resolve()
         call(
             [
                 "ffmpeg",
                 "-i",
-                video_file,
+                self.camera_1_video_path.resolve(),
                 "-vn",
                 "-acodec",
                 "pcm_s16le",
@@ -59,58 +57,71 @@ class MultiPod:
         self.clean_audio_var = clean_audio_var
         self.export_var = export_var
 
-    def run(self, progress_bar, done_label):
+    def run(self, progress_bar, be_patient_label, done_label):
         # Start the progress bar animation
         progress_bar.pack(pady=10)
         progress_bar.start()
 
-        print("self.camera_1_video_path", self.camera_1_video_path)
-        print("self.camera_2_video_path", self.camera_2_video_path)
-        print("self.camera_3_video_path", self.camera_3_video_path)
-        print("self.audio_path_1", self.audio_file)
-        print("video_prefs_selection_var: ", self.video_prefs_selection_var)
-        print("trim_silence_var: ", self.trim_silence_var)
-        print("threshold_scale_value: ", self.threshold_scale_value)
-        print("clean_audio_var: ", self.clean_audio_var)
-        print("export_var: ", self.export_var)
+        be_patient_label.pack(pady=10)
 
         #################################################
-        # all the core processing happens here
-        # Control Flow:
 
-        # STEP 2: sync videos with voice diarization
-        self.get_speaker_timestamps()
+        try:
+            # STEP 2: sync videos with voice diarization. get timestamps
+            # TODO: uncomment when ready
+            # self.get_speaker_timestamps()
 
-        # STEP 3: if video_prev -> simple cuts -> cut video together simply
-        # else -> creative cuts -> cut together with J/L
-        #   - If Shot Angle 3 is not none ->  footage available, Cut to a wide angle if more than one person is talking.
-        #   - Don’t cut away if someone is monologuing more than 30 secs. Even if they’re briefly interrupted.
-        #   - Don’t cut to a new camera for speech less than 3 secs.
-        #   - Cut to a new camera 3 secs BEFORE they start speaking. (L-Cut)
-        #   - Cut to a new camera 3 secs AFTER they start speaking. (J-Cut)
-        #   - Don’t cut to Person D if they talk.
-        #
-        # STEP 4: if audio_prev -> trim silence -> trim
-        #
-        # STEP 5: if audio_prev -> clean audio ->
-        # - remove unnecessary words uhh like etc.
-        # - make audio very clean and professional.
-        # - remove echoes, breath sounds, click pops, etc.
-        #
-        # STEP 6: if export_prev -> mp4/xml -> export in the correct format
+            # STEP 3: if video_prev -> simple cuts -> cut video together simply
+            if self.video_prefs_selection_var == "simple_back_and_forth_cuts":
+                pass
+                # cut video together -> simple back n forth
+            elif self.video_prefs_selection_var == "creative_cuts":
+                pass
+            #      -> cut together with J/L
+            #   - If Shot Angle 3 is not none ->  footage available, Cut to a wide angle if more than one person is talking.
+            #   - Don’t cut away if someone is monologuing more than 30 secs. Even if they’re briefly interrupted.
+            #   - Don’t cut to a new camera for speech less than 3 secs.
+            #   - Cut to a new camera 3 secs BEFORE they start speaking. (L-Cut)
+            #   - Cut to a new camera 3 secs AFTER they start speaking. (J-Cut)
+            #   - Don’t cut to Person D if they talk.
+            #
 
+            # STEP 4: if audio_prev -> trim silence -> trim and resync with video
+            if self.trim_silence_var:
+                pass
+
+            # STEP 5: if audio_prev -> clean audio ->
+            # - remove unnecessary words uhh like etc.
+            # - make audio very clean and professional.
+            # - remove echoes, breath sounds, click pops, etc.
+            # resync with video
+            if self.clean_audio_var:
+                pass
+
+            # STEP 6: if export_prev -> mp4/xml -> export in the correct format
+            # for xml ideas -> https://chatgpt.com/c/72f3f96d-341b-495f-b962-7d33bb1d3660
+            if self.export_var == "xml":
+                pass
+            elif self.export_var == "mp4":
+                pass
+
+            # STEP 7: delete audio and json files
+
+        except Exception as e:
+            logger.exception(e)
+            raise
         #################################################
 
         # After completing the task, update GUI
         progress_bar.stop()
         progress_bar.pack_forget()
+        be_patient_label.pack_forget()
         done_label.pack(pady=10)
 
     def get_speaker_timestamps(self):
         """
         Function to get speaker timestamps by diarizing, reading diarized RTTM file, initializing speaker timestamps, and writing timestamps.
         """
-
         try:
             sts = SpeakerTimestamps()
             sts.diarize(self.audio_file)

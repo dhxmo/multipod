@@ -1,5 +1,4 @@
 import os
-import re
 import threading
 import tkinter as tk
 from tkinter import filedialog, ttk, messagebox
@@ -32,15 +31,6 @@ class FRAME_1_file_select(tk.Frame):
                 controller.file_labels[label_key].config(text=filename)
                 btn.config(text=filename.split("/")[-1])
 
-        # def select_audio_file(file_tag, controller, btn):
-        #     filename = filedialog.askopenfilename(
-        #         filetypes=[("Audio Files", "*.mp3 *.wav")]
-        #     )
-        #     if filename:
-        #         # Display the selected file name in the label for the specified angle
-        #         controller.file_labels[file_tag].config(text=f"{filename}")
-        #         btn.config(text=filename.split("/")[-1])
-
         def create_file_selection_area(angle):
             # set label
             if angle == "1":
@@ -69,15 +59,6 @@ class FRAME_1_file_select(tk.Frame):
         angles = ["1", "2", "3"]
         for angle in angles:
             create_file_selection_area(angle)
-
-        # Audio select
-        # audio_select_button = ttk.Button(
-        #     self,
-        #     text="Select Podcast Audio",
-        #     command=lambda: select_audio_file(
-        #         "Audio File", controller, audio_select_button
-        #     ),
-        # )
 
         button1 = ttk.Button(
             self,
@@ -159,15 +140,6 @@ class FRAME_3_audio_prefs(tk.Frame):
                 # Display the selected file name in the label for the specified angle
                 controller.file_labels[file_tag].config(text=f"{filename}")
 
-        # file_tag = "Audio File"
-        # audio_file_label = tk.Label(self, text=f"Audio File Label")
-        # audio_file_label.pack(anchor="center", padx=10, pady=10)
-        # select_button = ttk.Button(self, text="Select File",
-        #                            command=lambda: select_audio_file(file_tag, controller))
-        # select_button.pack(anchor="center", padx=10, pady=20)
-        # controller.file_labels[file_tag] = tk.Label(self, text="No file selected yet.")
-        # controller.file_labels[file_tag].pack(anchor="center", padx=10, pady=10)
-
         self.checkbox1 = ttk.Checkbutton(
             self, text="trim silence", variable=controller.trim_silence_var
         )
@@ -237,6 +209,11 @@ class FRAME_4_export(tk.Frame):
         self.progress_bar = ttk.Progressbar(
             self, orient="horizontal", length=200, mode="indeterminate"
         )
+        self.be_patient_label = tk.Label(
+            self,
+            text="Be patient. This takes a while (not as long as doing this manually)",
+        )
+
         self.done_label = tk.Label(
             self, text="DONE! File is stored in ....", font=controller.bold_font
         )
@@ -289,5 +266,10 @@ class FRAME_4_export(tk.Frame):
                     )
 
                     threading.Thread(
-                        target=mp.run, args=(self.progress_bar, self.done_label)
+                        target=mp.run,
+                        args=(
+                            self.progress_bar,
+                            self.be_patient_label,
+                            self.done_label,
+                        ),
                     ).start()
