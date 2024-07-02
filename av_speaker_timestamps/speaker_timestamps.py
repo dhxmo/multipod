@@ -10,19 +10,9 @@ from imutils.video import FileVideoStream
 from pyannote.audio import Pipeline
 from tqdm import tqdm
 
-from timestamp_utils import logger, mouth_aspect_ratio
+from av_speaker_timestamps.timestamp_utils import logger, mouth_aspect_ratio
 
 warnings.filterwarnings("ignore")
-
-audio_file = "../assets/Dhruv.wav"
-video_file_1 = "../assets/videos/Dhruv.mov"
-video_1_file_name = "Dhruv"
-video_file_2 = "../assets/videos/Shonu.mov"
-video_2_file_name = "Shonu"
-
-os.makedirs("../assets/json/", exist_ok=True)
-video_1_json = f"../assets/json/{video_1_file_name}.json"
-video_2_json = f"../assets/json/{video_2_file_name}.json"
 
 
 class SpeakerTimestamps:
@@ -51,7 +41,7 @@ class SpeakerTimestamps:
         # TODO: only for debugger. uncomment otherwise
         # os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
-        self.shape_predictor = "./model/shape_predictor_68_face_landmarks.dat"
+        self.shape_predictor = "model/shape_predictor_68_face_landmarks.dat"
         self.detector = dlib.get_frontal_face_detector()
         self.predictor = dlib.shape_predictor(self.shape_predictor)
         self.times = {}
@@ -59,7 +49,7 @@ class SpeakerTimestamps:
         self.max_speaker0_frames = []
         self.max_speaker1_frames = []
 
-    def diarize(self):
+    def diarize(self, audio_file):
         """
         Diarizes the audio file using the pretrained pipeline and saves the diarization results to a file named "diarization.rttm".
 
@@ -72,6 +62,7 @@ class SpeakerTimestamps:
 
         Returns:
             None
+            :param audio_file: Path to the audio file to diarize
         """
         try:
             # send pipeline to GPU (when available)
@@ -209,7 +200,7 @@ class SpeakerTimestamps:
             logger.exception(e)
             return None, None
 
-    def write_timestamps(self):
+    def write_timestamps(self, video_file_1, video_file_2, video_1_json, video_2_json):
         """
         Writes the speaker timestamps to JSON files for two video files.
 
@@ -225,40 +216,14 @@ class SpeakerTimestamps:
 
         Raises:
             Exception: If an error occurs during the writing process.
+            :param video_1_json: Path to the JSON file for P1
+            :param video_2_json: Path to the JSON file for P2
+            :param video_file_1: Path to P1 shot
+            :param video_file_2: Path to P2 shot
 
         """
 
         # ideally should run the two in parallel process, but causing pc crashes. so have to run linearly.
-        # Define the function to be executed in parallel
-        # def process_video(video_file):
-        #     print("starting process_video: ", video_file)
-        #
-        #     video_freq0, video_freq1 = self.open_mouth(video_file)
-        #     return video_file, video_freq0, video_freq1
-        #
-        # # Prepare arguments for the parallel execution
-        # args_list = [
-        #     video_file_1,
-        #     video_file_2
-        # ]
-        #
-        # # Specify the number of threads
-        # num_threads = min(10, multiprocessing.cpu_count())
-        #
-        # # Execute the function in parallel using ThreadPoolExecutor
-        # with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
-        #     future_to_args = {executor.submit(process_video, args): args for args in args_list}
-        #
-        #     for future in concurrent.futures.as_completed(future_to_args):
-        #         print("finished future: ", future.result())
-        #
-        #         video_file, video_freq0, video_freq1 = future.result()
-        #
-        #         if video_file == video_file_1:
-        #             video_0_freq0, video_0_freq1 = video_freq0, video_freq1
-        #         elif video_file == video_file_2:
-        #             video_1_freq0, video_1_freq1 = video_freq0, video_freq1
-
         video_0_freq0, video_0_freq1 = self.open_mouth_detect(video_file_1)
         video_1_freq0, video_1_freq1 = self.open_mouth_detect(video_file_2)
 
@@ -309,26 +274,7 @@ class SpeakerTimestamps:
                 json.dump(video_1_dicts, final)
 
             os.remove("diarization.rttm")
+            print("removed diarization.rttm")
         except Exception as e:
             logger.exception(e)
             raise
-
-
-def get_timestamps():
-    """
-    Function to get speaker timestamps by diarizing, reading diarized RTTM file, initializing speaker timestamps, and writing timestamps.
-    """
-
-    try:
-        sts = SpeakerTimestamps()
-        sts.diarize()
-        sts.read_diarize_rttm()
-        sts.initialize_speaker_timestamps()
-        sts.write_timestamps()
-    except Exception as e:
-        logger.exception(e)
-        raise
-
-
-if __name__ == "__main__":
-    get_timestamps()

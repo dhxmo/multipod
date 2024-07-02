@@ -1,3 +1,4 @@
+import os
 import re
 import threading
 import tkinter as tk
@@ -31,14 +32,14 @@ class FRAME_1_file_select(tk.Frame):
                 controller.file_labels[label_key].config(text=filename)
                 btn.config(text=filename.split("/")[-1])
 
-        def select_audio_file(file_tag, controller, btn):
-            filename = filedialog.askopenfilename(
-                filetypes=[("Audio Files", "*.mp3 *.wav")]
-            )
-            if filename:
-                # Display the selected file name in the label for the specified angle
-                controller.file_labels[file_tag].config(text=f"{filename}")
-                btn.config(text=filename.split("/")[-1])
+        # def select_audio_file(file_tag, controller, btn):
+        #     filename = filedialog.askopenfilename(
+        #         filetypes=[("Audio Files", "*.mp3 *.wav")]
+        #     )
+        #     if filename:
+        #         # Display the selected file name in the label for the specified angle
+        #         controller.file_labels[file_tag].config(text=f"{filename}")
+        #         btn.config(text=filename.split("/")[-1])
 
         def create_file_selection_area(angle):
             # set label
@@ -70,15 +71,13 @@ class FRAME_1_file_select(tk.Frame):
             create_file_selection_area(angle)
 
         # Audio select
-        audio_select_button = ttk.Button(
-            self,
-            text="Select Podcast Audio",
-            command=lambda: select_audio_file(
-                "Audio File", controller, audio_select_button
-            ),
-        )
-        # audio_select_button.grid(row=6, column=1, padx=10, pady=20)
-        # controller.file_labels["Audio File"] = tk.Label(self, text="")
+        # audio_select_button = ttk.Button(
+        #     self,
+        #     text="Select Podcast Audio",
+        #     command=lambda: select_audio_file(
+        #         "Audio File", controller, audio_select_button
+        #     ),
+        # )
 
         button1 = ttk.Button(
             self,
@@ -277,6 +276,9 @@ class FRAME_4_export(tk.Frame):
                     and file_paths
                     and controller.video_prefs_selection_var.get()
                 ):
+                    os.makedirs("assets/sounds/", exist_ok=True)
+                    os.makedirs("assets/json/", exist_ok=True)
+
                     mp = MultiPod(
                         file_paths,
                         controller.video_prefs_selection_var.get(),

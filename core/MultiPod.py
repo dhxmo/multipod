@@ -1,4 +1,9 @@
+import os
 from pathlib import Path
+from subprocess import call
+
+from av_speaker_timestamps.speaker_timestamps import SpeakerTimestamps
+from core.util import logger
 
 
 class MultiPod:
@@ -14,7 +19,6 @@ class MultiPod:
         self.camera_1_video_path = None
         self.camera_2_video_path = None
         self.camera_3_video_path = None
-        self.audio_path = None
 
         for k, v in file_paths.items():
             if v != "No file selected yet.":
@@ -24,8 +28,30 @@ class MultiPod:
                     self.camera_2_video_path = Path(v)
                 elif k == "Shot Angle 3":
                     self.camera_3_video_path = Path(v)
-                elif k == "Audio File 1":
-                    self.audio_path = Path(v)
+
+        self.audio_file = Path(
+            "assets/sounds/" + self.camera_1_video_path.stem + ".wav"
+        )
+
+        video_file = self.camera_1_video_path.resolve()
+        call(
+            [
+                "ffmpeg",
+                "-i",
+                video_file,
+                "-vn",
+                "-acodec",
+                "pcm_s16le",
+                "-ar",
+                "44100",
+                "-ac",
+                "2",
+                self.audio_file.resolve(),
+            ]
+        )
+
+        self.video_1_json = f"assets/json/{self.camera_1_video_path.stem}.json"
+        self.video_2_json = f"assets/json/{self.camera_2_video_path.stem}.json"
 
         self.video_prefs_selection_var = video_prefs_selection_var
         self.trim_silence_var = trim_silence_var
@@ -41,7 +67,7 @@ class MultiPod:
         print("self.camera_1_video_path", self.camera_1_video_path)
         print("self.camera_2_video_path", self.camera_2_video_path)
         print("self.camera_3_video_path", self.camera_3_video_path)
-        print("self.audio_path_1", self.audio_path)
+        print("self.audio_path_1", self.audio_file)
         print("video_prefs_selection_var: ", self.video_prefs_selection_var)
         print("trim_silence_var: ", self.trim_silence_var)
         print("threshold_scale_value: ", self.threshold_scale_value)
@@ -53,6 +79,7 @@ class MultiPod:
         # Control Flow:
 
         # STEP 2: sync videos with voice diarization
+        self.get_speaker_timestamps()
 
         # STEP 3: if video_prev -> simple cuts -> cut video together simply
         # else -> creative cuts -> cut together with J/L
@@ -78,3 +105,23 @@ class MultiPod:
         progress_bar.stop()
         progress_bar.pack_forget()
         done_label.pack(pady=10)
+
+    def get_speaker_timestamps(self):
+        """
+        Function to get speaker timestamps by diarizing, reading diarized RTTM file, initializing speaker timestamps, and writing timestamps.
+        """
+
+        try:
+            sts = SpeakerTimestamps()
+            sts.diarize(self.audio_file)
+            sts.read_diarize_rttm()
+            sts.initialize_speaker_timestamps()
+            sts.write_timestamps(
+                self.camera_1_video_path,
+                self.camera_2_video_path,
+                self.video_1_json,
+                self.video_2_json,
+            )
+        except Exception as e:
+            logger.exception(e)
+            raise
