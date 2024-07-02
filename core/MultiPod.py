@@ -2,8 +2,15 @@ from pathlib import Path
 
 
 class MultiPod:
-    def __init__(self, file_paths, video_prefs_selection_var, trim_silence_var,
-                 threshold_scale_value, clean_audio_var, export_var):
+    def __init__(
+        self,
+        file_paths,
+        video_prefs_selection_var,
+        trim_silence_var,
+        threshold_scale_value,
+        clean_audio_var,
+        export_var,
+    ):
         self.camera_1_video_path = None
         self.camera_2_video_path = None
         self.camera_3_video_path = None

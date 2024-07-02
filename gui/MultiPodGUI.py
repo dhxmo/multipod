@@ -3,7 +3,12 @@ from tkinter import ttk, messagebox, font
 
 import ttkthemes
 
-from gui.frames import FRAME_1_file_select, FRAME_2_video_prefs, FRAME_3_audio_prefs, FRAME_4_export
+from gui.frames import (
+    FRAME_1_file_select,
+    FRAME_2_video_prefs,
+    FRAME_3_audio_prefs,
+    FRAME_4_export,
+)
 
 
 class MultiPodGUI:
@@ -14,14 +19,14 @@ class MultiPodGUI:
         self.root.title("MultiPod")
 
         self.root.geometry("500x600")
-        self.root.configure(background='white')
+        self.root.configure(background="white")
         self.root.resizable(False, False)
         default_font = font.nametofont("TkDefaultFont")
         default_font.configure(family="Arial", size=10)
         self.root.option_add("*Font", default_font)
 
         s = ttk.Style(self.root)
-        s.configure('flat.TButton', borderwidth=0)
+        s.configure("flat.TButton", borderwidth=0)
 
         style = ttkthemes.ThemedStyle()
         style.set_theme("breeze")
@@ -54,7 +59,12 @@ class MultiPodGUI:
         self.export_var = tk.StringVar()
 
         self.frames = {}
-        for F in (FRAME_1_file_select, FRAME_2_video_prefs, FRAME_3_audio_prefs, FRAME_4_export):
+        for F in (
+            FRAME_1_file_select,
+            FRAME_2_video_prefs,
+            FRAME_3_audio_prefs,
+            FRAME_4_export,
+        ):
             frame = F(container, self)
             frame.grid(row=0, column=0, sticky="nsew")
             self.frames[F] = frame
