@@ -2,7 +2,7 @@ from pathlib import Path
 from subprocess import call
 
 from av_speaker_timestamps.speaker_timestamps import SpeakerTimestamps
-from core.util import logger
+from core.util import logger, mod_json_2_specs, combine_mod_jsons
 
 
 class MultiPod:
@@ -62,8 +62,17 @@ class MultiPod:
             ]
         )
 
-        self.video_1_json = f"assets/json/{self.camera_1_video_path.stem}.json"
-        self.video_2_json = f"assets/json/{self.camera_2_video_path.stem}.json"
+        self.filename_1 = self.camera_1_video_path.stem
+        self.filename_2 = self.camera_2_video_path.stem
+        self.filename_3 = self.camera_3_video_path.stem
+
+        self.video_1_json = f"assets/json/{self.filename_1}.json"
+        self.video_2_json = f"assets/json/{self.filename_2}.json"
+
+        self.video_1_json_mod = f"assets/json/{self.filename_1}_mod.json"
+        self.video_2_json_mod = f"assets/json/{self.filename_2}_mod.json"
+
+        self.combined_json = f"assets/json/combined_timestamps.json"
 
         self.video_prefs_selection_var = video_prefs_selection_var
         self.trim_silence_var = trim_silence_var
@@ -99,9 +108,7 @@ class MultiPod:
             # self.get_speaker_timestamps()
 
             # STEP 3a -> preprocess the json
-            # if the (key_next_start < key_prev_end) or (key_next_start < key_prev_end + 1)
-            #   key_prev_start -> key_next_end into one json entry
-            #   duration of the two added together
+            self.preprocess_json()
 
             # STEP 3b: if video_prev -> simple cuts -> cut video together simply
             # TODO: when silent and P3 provided, use that, else pick P1/P2 randomly
@@ -110,16 +117,12 @@ class MultiPod:
                 pass
                 # cut video together -> simple back n forth
             elif self.video_prefs_selection_var == "creative_cuts":
-                # preprocess the json
-                #  if duration < 2 -> duration = 3
                 pass
-                # preprocess the json
-
-            #   - If P3 is not none -> Cut to a wide angle if both are talking.
-            #   - Don’t cut away if someone is monologuing more than 30 secs. Even if they’re briefly interrupted.
-            #   - Don’t cut to a new camera for speech less than 3 secs.
-            #   - Cut to a new camera 3 secs BEFORE they start speaking. (L-Cut)
-            #   - Cut to a new camera 3 secs AFTER they start speaking. (J-Cut)
+                #   - If P3 is not none -> Cut to a wide angle if both are talking.
+                #   - Don’t cut away if someone is monologuing more than 30 secs. Even if they’re briefly interrupted.
+                #   - Don’t cut to a new camera for speech less than 3 secs.
+                #   - Cut to a new camera 3 secs BEFORE they start speaking. (L-Cut)
+                #   - Cut to a new camera 3 secs AFTER they start speaking. (J-Cut)
 
             # STEP 4: if audio_prev -> trim silence -> trim and resync with video
             if self.trim_silence_var:
@@ -172,3 +175,14 @@ class MultiPod:
         except Exception as e:
             logger.exception("Unhandled exception in getting timestamps: %s", str(e))
             raise
+
+    def preprocess_json(self):
+        mod_json_2_specs(self.video_1_json, self.video_1_json_mod)
+        mod_json_2_specs(self.video_2_json, self.video_2_json_mod)
+        combine_mod_jsons(
+            self.video_1_json_mod,
+            self.video_2_json_mod,
+            self.combined_json,
+            self.filename_1,
+            self.filename_2,
+        )
